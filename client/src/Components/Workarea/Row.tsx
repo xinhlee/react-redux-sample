@@ -14,9 +14,7 @@ import { isLastCard, canDropHere, generateNewId } from "../../Util/CardUtils";
 import styled from "styled-components";
 
 type Props = {
-  isNewRow: boolean;
   id: string;
-  value?: string;
 };
 
 // Styled
@@ -25,7 +23,7 @@ const SRow = styled.div`
   min-height: 40px;
 `;
 
-function Row({ id, isNewRow, value }: Props) {
+function Row({ id }: Props) {
   // Hooks
 
   const card = useSelector((state: RootState) => state.card);
@@ -62,11 +60,11 @@ function Row({ id, isNewRow, value }: Props) {
     e.preventDefault();
   };
 
-  const handleClickAddCard = (e: React.MouseEvent) => {
+  const handlerClickAdd = () => {
     onAddCard();
   };
 
-  // Functions
+  // Function
 
   const onAddCard = () => {
     let newName = generateNewId();
@@ -91,7 +89,7 @@ function Row({ id, isNewRow, value }: Props) {
           return <Card key={i.id} id={i.id} parent={id}></Card>;
         }
       })}
-      {isNewRow && <button onClick={handleClickAddCard}>Add</button>}
+      <button onClick={handlerClickAdd}>add</button>
     </SRow>
   );
 }

@@ -1,9 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { CardState, CardType, RowType } from "./Type";
-import { RootState, addRows } from "./store";
+import { CardState, CardType, NewRowType, RowType } from "./Type";
+import {
+  RootState,
+  addRowInBetween,
+  addRows,
+  changeRow,
+  resetNewAndChangedCard,
+  resetNewAndChangedRow,
+} from "./store";
 
 const cardState: CardState = {
   card: [],
+  removedCard: [],
 };
 
 export const cardSlice = createSlice({
@@ -14,17 +22,37 @@ export const cardSlice = createSlice({
       state.card.push(action.payload);
     },
     deleteCard: (state, action) => {
-      state.card = state.card.filter((i: CardType) => i.id !== action.payload);
+      let isNew; // check if in db
+
+      state.card = state.card.filter((i: CardType) => {
+        isNew = i.isNew;
+        return i.id !== action.payload;
+      });
+
+      if (!isNew) state.removedCard.push(action.payload);
     },
     changeRow: (state, action) => {
       let indexOfChangedCard = state.card.findIndex(
         (i) => i.id === action.payload.id
       );
 
-      let changedCard = state.card.splice(indexOfChangedCard, 1)[0];
-      changedCard.row = action.payload.row;
+      let changedCard = {
+        ...state.card.splice(indexOfChangedCard, 1)[0],
+        hasChanged: true,
+        row: action.payload.row,
+      };
 
       state.card.push(changedCard);
+    },
+    resetNewAndChangedCard: (state) => {
+      state.card = state.card.map((c) => {
+        return {
+          ...c,
+          isNew: undefined,
+          hasChanged: undefined,
+        };
+      });
+      state.removedCard = [];
     },
   },
   extraReducers: (builder) => {
@@ -32,11 +60,17 @@ export const cardSlice = createSlice({
       state.card = action.payload;
     });
 
-    builder.addCase(saveChangesToDatabase.fulfilled, (state, action) => {
-      alert(action.payload);
-    });
+    builder.addCase(saveChangesToDatabase.fulfilled, (state, action) => {});
   },
 });
+
+export const addCardInBetweenRows = createAsyncThunk(
+  "card/addCardInBetweenRows",
+  async (row: NewRowType, { dispatch }) => {
+    dispatch(addRowInBetween(row));
+    dispatch(changeRow({ id: row.draggedId, row: row.newRowId }));
+  }
+);
 
 export const fetchCard = createAsyncThunk(
   "card/fetchCard",
@@ -47,7 +81,7 @@ export const fetchCard = createAsyncThunk(
 
     dispatch(addRows(response.rowDetail));
 
-    return response.data;
+    return response.cardDetail;
   }
 );
 
@@ -56,19 +90,33 @@ export const saveChangesToDatabase = createAsyncThunk(
   async (_, { dispatch, getState }) => {
     const state = getState() as RootState;
 
-    let newCards = state.card.card.filter((c: CardType) => c.isNew === true);
-    let newRows = state.row.row.filter((r: RowType) => r.isNew === true);
+    let changedRow = state.row.row.slice(0, -1);
+    changedRow = changedRow.filter((r: RowType) => {
+      return (
+        r.hasChanged === true || (r.isNew === true && r.next !== undefined)
+      );
+    });
 
-    let response = await fetch("/api/card/saveCards", {
+    let changedCard = state.card.card.filter((c: CardType) => {
+      return c.hasChanged === true || c.isNew === true;
+    });
+
+    fetch("/api/card/saveCards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        newCards: newCards,
-        newRows: newRows,
+        changedCard: changedCard,
+        changedRow: changedRow,
+        removedCard: state.card.removedCard,
+        removedRow: state.row.removedRow,
       }),
-    }).then((response) => response.json());
-
-    return response;
+    })
+      .then((response) => {
+        dispatch(resetNewAndChangedCard());
+        dispatch(resetNewAndChangedRow());
+        return response;
+      })
+      .catch((error) => error);
   }
 );
 

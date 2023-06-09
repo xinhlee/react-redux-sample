@@ -2,14 +2,22 @@ export type CardType = {
   id: number;
   name: string;
   row: string;
+  hasChanged?: boolean;
   isNew?: boolean;
 };
 
 export type RowType = {
   id: string;
-  isNewRow: boolean;
   isNew?: boolean;
+  hasChanged?: boolean;
   prev?: string;
+  next?: string;
+};
+
+export type NewRowType = {
+  draggedId?: number;
+  newRowId: string;
+  previousOf: string;
 };
 
 export type DragItemType = {
@@ -19,6 +27,7 @@ export type DragItemType = {
 
 export interface CardState {
   card: Array<CardType>;
+  removedCard: Array<number>;
 }
 
 export interface DragState {
@@ -27,19 +36,8 @@ export interface DragState {
   target?: string;
 }
 
-// export interface DragCardState {
-//   draggedCardId?: string;
-//   originalContainer?: number;
-//   targetContainer?: number;
-// }
-
-// export interface DragItemState {
-//   draggedItemId?: string;
-//   originalCard?: number;
-//   targetCard?: number;
-// }
-
 export interface RowState {
   total: number;
   row: Array<RowType>;
+  removedRow: Array<string>;
 }

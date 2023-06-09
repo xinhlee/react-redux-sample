@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
+  AppDispatch,
   RootState,
   addRowInBetween,
   changeRow,
@@ -9,6 +10,7 @@ import {
   setTarget,
 } from "../../Store/store";
 import { generateNewId, isLastCard, canDropHere } from "../../Util/CardUtils";
+import { addCardInBetweenRows } from "../../Store/CardSlice";
 
 type Props = {
   borderOf: string;
@@ -72,25 +74,18 @@ function RowBorder({ borderOf }: Props) {
 
   const [isHoveredOver, setIsHoveredOver] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Handlers
 
   const handleDrop = (e: React.DragEvent) => {
-    if (canDropHere("card", drag)) {
+    if (canDropHere("card", drag, true)) {
       let newRowId = generateNewId();
-
       dispatch(
-        addRowInBetween({
-          id: newRowId,
+        addCardInBetweenRows({
+          draggedId: drag.draggedItem?.id,
+          newRowId: newRowId,
           previousOf: borderOf,
-        })
-      );
-
-      dispatch(
-        changeRow({
-          id: drag.draggedItem?.id,
-          row: newRowId,
         })
       );
 

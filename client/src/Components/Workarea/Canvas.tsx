@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 
 import Row from "./Row";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState, addRow } from "../../Store/store";
-import { generateNewId, getTotalRow } from "../../Util/CardUtils";
+import { AppDispatch, RootState, add, addRow } from "../../Store/store";
+import { generateNewId, getTotalRow, isRowEmpty } from "../../Util/CardUtils";
 import styled from "styled-components";
 import RowBorder from "./RowBorder";
 import { fetchCard, saveChangesToDatabase } from "../../Store/CardSlice";
@@ -32,37 +32,30 @@ function Canvas({}: Props) {
   }, [dispatch]);
 
   useEffect(() => {
-    if (getTotalRow(card.card) === row.total && row.total !== 0) {
+    if (getTotalRow(card.card) === row.total) {
       dispatch(addRow(generateNewId()));
     }
+    return () => {};
   }, [card.card, dispatch, row.total, row.row]);
 
   // Handlers
 
   const handlerClickSave = () => {
-    saveChanges();
+    onSaveChanges();
   };
 
   // Functions
-
-  const saveChanges = () => {
+  const onSaveChanges = () => {
     dispatch(saveChangesToDatabase());
   };
 
   return (
     <SCanvas>
       {row.row.map((row) => {
-        if (!row.isNewRow) {
-          return (
-            <div key={row.id}>
-              <RowBorder borderOf={row.id} />
-              <Row id={row.id} isNewRow={row.isNewRow} />
-            </div>
-          );
-        }
         return (
           <div key={row.id}>
-            <Row id={row.id} isNewRow={row.isNewRow} />
+            {!isRowEmpty(card.card, row) && <RowBorder borderOf={row.id} />}
+            <Row id={row.id} />
           </div>
         );
       })}

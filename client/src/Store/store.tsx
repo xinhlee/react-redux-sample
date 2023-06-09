@@ -3,20 +3,18 @@ import { cardSlice } from "./CardSlice";
 import { dragSlice } from "./DragSlice";
 import { rowSlice } from "./RowSlice";
 
-export const { add, deleteCard, changeRow } = cardSlice.actions;
+export const { add, deleteCard, changeRow, resetNewAndChangedCard } =
+  cardSlice.actions;
 
-// export const {
-//   setDraggedCardId,
-//   setOriginalContainer,
-//   setTargetContainer,
-//   resetCard,
-// } = dragCardSlice.actions;
-
-// export const { setDraggedItemId, setOriginalCard, setTargetCard, resetItem } =
-//   dragItemSlice.actions;
 export const { setDraggedItem, setSource, setTarget } = dragSlice.actions;
 
-export const { addRows, addRow, deleteRow, addRowInBetween } = rowSlice.actions;
+export const {
+  addRows,
+  addRow,
+  deleteRow,
+  addRowInBetween,
+  resetNewAndChangedRow,
+} = rowSlice.actions;
 
 const store = configureStore({
   reducer: {
